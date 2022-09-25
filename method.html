@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Computer Vision(Mobile): Running</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT"
+      crossorigin="anonymous"
+    />
+    <link href="./css/styles.css" rel="stylesheet" />
+  </head>
+  <header>
+    <!-- Nav Start -->
+    <nav
+      class="nav bg-primary p-2 d-flex justify-content-between align-items-start"
+    >
+      <div class="nav-item fw-bold col-10">Computer Vision: Running</div>
+      <div class="d-flex justify-content-evenly col-2">
+        <a href="./index.html">
+          <div class="nav-item">Home</div>
+        </a>
+        <a href="./method.html">
+          <div class="nav-item">Method</div>
+        </a>
+      </div>
+    </nav>
+    <!-- Nav End -->
+  </header>
+  <body>
+    <div class="main pb-5">
+      <div class="container">
+        <!-- Title Start -->
+        <div class="row">
+          <div class="h2 text-center pt-4 fw-semibold">Tutorial</div>
+        </div>
+        <!-- Title End -->
+        <!-- Definition of Terms Start -->
+        <div class="row mt-5">
+          <div class="h4 fw-bold">Some terms to be familiar with...</div>
+          <ul>
+            <li class="mt-3">
+              <strong>Zero-crossing:</strong> a point where the sign of a
+              mathematical function changes (e.g. from positive to negative)
+            </li>
+            <li class="mt-3">
+              <strong> Gradient: </strong>a gradient is a derivative of a
+              function that has more than one input variable. Known as the slope
+              of a function in mathematical terms
+            </li>
+            <li class="mt-3">
+              <strong> Initial Contact(IC): </strong>the moment the foot first
+              makes contact with the ground during gait
+            </li>
+            <li class="mt-3">
+              <strong> Bounding Box: </strong>the border's coordinates that
+              enclose an image. They are often used to bind or identify a target
+              and serve as a reference point for object detection and create a
+              collision box for that object
+            </li>
+            <li class="mt-3">
+              <strong> Intersection over Union (IoU): </strong>a metric to
+              evaluate how close the prediction bounding box is to the ground
+              truth
+            </li>
+          </ul>
+        </div>
+        <!-- Definition of Terms End -->
+        <!-- Method Start -->
+        <div class="row mt-5">
+          <div class="h4 fw-bold">1. Method Overiew</div>
+        </div>
+        <div class="row mt-1">
+          <p>
+            The project will use lightweight
+            <em>Computer Vision to</em> identify and track the feet within a
+            video frame captured by a smartphone camera, developed in
+            <a href="https://github.com/opencv/opencv-python" target="_blank">
+              Python's OpenCV library</a
+            >. The tracked location of the foot informs a zero-crossing gradient
+            analysis approach to identifying initial contact within running gait
+          </p>
+        </div>
+        <div class="row justify-content-center">
+          <div class="col-12">
+            <div class="h6 text-center">Flowchart of the model process</div>
+          </div>
+          <img
+            src="./public/images/method/flowchart.gif"
+            alt="Flowchart of method"
+            style="width: 20rem"
+          />
+        </div>
+        <!-- Gathering Data Start -->
+        <div class="row mt-5">
+          <div class="h4 fw-bold">2. Gathering Data and Labelling</div>
+        </div>
+        <div class="row mt-1">
+          <div>
+            The efficiency of your model will only be as good as the data that
+            you give it. Now, the next step is to gather data from different
+            participants. Once, you have a selected group of random participants
+            follow the steps below to gather the data:
+            <div class="mx-5 mt-1">
+              <ol>
+                <li class="mt-2">
+                  Record the participants lower body (make sure to capture the
+                  feet!) while they runn on a treadmill from 3 angles front,
+                  side, and back for 2 minutes from your mobile device
+                </li>
+                <li class="mt-2">
+                  Optional: Set your mobile device's recording quality to the
+                  highest possible framerate and resolution. Here's some videos
+                  on how to do it on
+                  <a href="https://www.youtube.com/watch?v=w0WgAeSGggg"
+                    >Android</a
+                  >
+                  or
+                  <a href="https://www.youtube.com/watch?v=M4PYFRg6jFA">iOS</a>.
+                </li>
+                <li class="mt-2">
+                  After finishing the recordings, we have to manually label the
+                  data.
+                </li>
+                <li class="mt-2">
+                  Draw a bounding box that encloses both feet for each frame
+                </li>
+                <li class="mt-2">
+                  Label the initial contact (IC) for each relevant frame. Make
+                  sure to repeat this process for each foot!
+                  <div
+                    class="d-flex justify-content-center flex-column align-items-center mt-4"
+                  >
+                    <div class="h6 text-center">Sample Data</div>
+                    <img
+                      src="./public/images/method/sample_data_labelled.gif"
+                      style="width: 30rem"
+                    />
+                  </div>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+        <!-- Gathering Data End -->
+        <!-- Training Start -->
+        <!-- Part 1 Start -->
+        <div class="row mt-5">
+          <div class="h4 fw-bold" id="sect3">
+            3. (Optional) Background on Training
+          </div>
+        </div>
+        <div class="row mt-1">
+          <p>
+            In this section we're going to be go over references from the actual
+            research on how the training was done and how we can leverage their
+            findings
+          </p>
+          <ul>
+            <li>
+              <div class="fw-bold">
+                Foot Detection Model Part #1: Object Detection
+                <a href="#ref1" ref-type="bibr">[1]</a>
+              </div>
+              <div class="h6 fw-bold mt-4">Breakdown:</div>
+              <p>
+                The researchers investigated 3 main object detection models to
+                find the best foot tracking approach. Those models are the ff
+                listed below:
+              </p>
+              <ul>
+                <li>
+                  <strong>Faster RCNN inception v2</strong>
+                  <ul>
+                    <li>
+                      <div class="text-secondary mt-1">
+                        <q
+                          >Faster R-CNN is a deep convolutional network used for
+                          object detection, that appears to the user as a
+                          single, end-to-end, unified network. The network can
+                          accurately and quickly predict the locations of
+                          different objects.</q
+                        ><a href="#ref2" ref-type="bibr">[2]</a>
+                      </div>
+                    </li>
+                  </ul>
+                </li>
+                <li class="mt-2">
+                  <strong>RFCN resnetIOI</strong>
+                  <ul class="text-secondary mt-1">
+                    <li>
+                      RFCN - Region Based Fully Convolutional Neural Network
+                    </li>
+                    <li>
+                      <div>
+                        <q
+                          >ResNet-101 is a convolutional neural network that is
+                          101 layers deep. You can load a pretrained version of
+                          the network trained on more than a million images from
+                          the ImageNet database [1]. The pretrained network can
+                          classify images into 1000 object categories, such as
+                          keyboard, mouse, pencil, and many animals.</q
+                        ><a href="#ref3" ref-type="bibr">[3]</a>
+                      </div>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>ssd mobilenet−v2</strong>
+                  <ul>
+                    <li>
+                      <q
+                        >SSD Mobilenet V2 is a one-stage object detection model
+                        which has gained popularity for its lean network and
+                        novel depthwise separable convolutions. It is a model
+                        commonly deployed on low compute devices such as mobile
+                        (hence the name Mobilenet) with high accuracy
+                        performance.</q
+                      ><a href="#ref4" ref-type="bibr">[4]</a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+              <p class="mt-4">
+                The models were trained using a 75:25 train/test split ratio (in
+                simple terms, 75% of the data was used to train the model and
+                25% were used to validate the results).
+              </p>
+              <p>
+                These models also utilized
+                <q
+                  >transfer learning, trained utilizing a deep learning server
+                  (12GB Nvidia K80, 16GB RAM, Python 3.8, TensorFlow 1.15.2).
+                  During training, a grid search optimization strategy was
+                  deployed to ensure maximum performance and efficiency through
+                  autonomous benchmarking</q
+                ><a href="#ref1">[1]</a>
+              </p>
+            </li>
+          </ul>
+        </div>
+        <!-- Part 1 End -->
+        <!-- Part 2 Start -->
+        <div class="row mt-1">
+          <ul>
+            <li>
+              <div class="fw-bold">
+                Foot Detection Model Part #2: Foot Tracking
+                <a href="#ref1" ref-type="bibr">[1]</a>
+              </div>
+              <div class="h6 fw-bold mt-4">Breakdown:</div>
+              <div>
+                <ul>
+                  <li class="mt-2">
+                    Once the object detection component detects a foot
+                  </li>
+                  <li class="mt-2">
+                    An object tracking instance was used to track the foot in
+                    the video
+                  </li>
+                  <li class="mt-2">
+                    The vector location (X,Y) of each tracked foot is stored for
+                    every video frame to be used further in gradient analysis
+                  </li>
+                  <li class="mt-2">
+                    2 high performance object tracking approaches were also
+                    investigated to determine the optimal combination of foot
+                    detection/tracking method (listed below):
+                    <ul>
+                      <li>
+                        discriminative correlation filter with channel and
+                        spatial reliability (CSR-DCF)
+                      </li>
+                      <li>kernelized correlation filter (KCF)</li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <!-- Part 2 End -->
+        <!-- Findings Start -->
+        <div class="row mt-1">
+          <ul>
+            <li>
+              <div class="fw-bold">
+                Findings of the research
+                <a href="#ref1" ref-type="bibr">[1]</a>
+              </div>
+              <q>
+                Observing the IoU of each model, an optimal rating of 0.913
+                across all labelled images in the test dataset demonstrated the
+                highest performance for faster_rcnn_inception_v2 with CSR-DCF
+                object tracking. </q
+              ><a href="#ref1">[1]</a>
+              <div
+                class="d-flex justify-content-center flex-column align-items-center mt-4"
+              >
+                <div class="h5">Photo of results</div>
+                <img
+                  src="./public/images/method/ai_model_results.gif"
+                  style="height: 200px"
+                />
+              </div>
+            </li>
+            <div></div>
+          </ul>
+        </div>
+        <!-- Findings End -->
+        <!-- Training End -->
+        <!-- Actual Training Start -->
+        <div class="row mt-5">
+          <div class="h4 fw-bold">4. Creating and training the model</div>
+          <div>
+            <p>
+              Now we're going to be creating and training the model for gait
+              analysis on running. We will be using
+              <strong
+                >Faster RCNN Inception v2 with the tracking method: CSR-DCF
+                object tracking</strong
+              >. If you're wondering why, we chose these variables
+              <a href="#sect3">Section 3</a> shows that these two are the most
+              optimal and high performance methods for our use case.
+            </p>
+          </div>
+          <div class="mx-4">
+            <div class="h5 fw-bold">Steps:</div>
+            <ol>
+              <li>
+                Train model using a 75:25 train/test split ratio (75% of data
+                for training, 25% for validation)
+              </li>
+              <li>Adjust model parameters</li>
+              <li>
+                Validate data.
+                <ul>
+                  <li>Object detection component detects foot in frame</li>
+                  <li>Object tracking instance tracks the foot in the video</li>
+                  <li>
+                    vector location (X,Y) of each tracked foot is stored for
+                    every video frame for gradient analysis
+                  </li>
+                </ul>
+              </li>
+              <li>
+                Plot and analyze results via Gradient Analysis
+                <div
+                  class="d-flex flex-column align-items-center justify-content-center mt-4"
+                >
+                  <div class="h5 text-center">
+                    Sample Gradient Analysis Chart
+                  </div>
+                  <img
+                    src="./public/images/method/gradient_analysis.gif"
+                    style="height: 350px"
+                  />
+                  <ul class="mt-3">
+                    <li class="mt-2">
+                      <span class="text-danger fw-semibold">IC</span> is the
+                      point of first impact with the ground after a
+                      <span class="text-success fw-semibold"
+                        >full stride extension</span
+                      >
+                      <a href="#ref5">[5]</a>
+                    </li>
+                    <li class="mt-2">
+                      <q
+                        >maximum extension of the leg is identified through
+                        locating a zero-crossing gradient peak within the
+                        horizontal foot plane </q
+                      ><a href="#ref1">[1]</a><br /><span
+                        class="text-primary fw-semibold"
+                        >(Refer to Foot Location X in graph)</span
+                      >
+                    </li>
+                    <li class="mt-2">
+                      <q
+                        >Once identified, a 30-frame region of interest
+                        (equating to 0.125s) is searched for the largest
+                        gradient change in vertical location (i.e., foot has
+                        stopped accelerating in the vertical plane), denoting an
+                        IC event </q
+                      ><a href="#ref1">[1]</a><br /><span
+                        class="text-warning fw-semibold"
+                        >(Refer to Foot Location Y in graph)</span
+                      >
+                    </li>
+                    <li>
+                      <div class="fw-bold">Pseudocode:</div>
+                      <code
+                        >Algorithm 1 Initial contact (IC) identification
+                        <br />
+                        Require: Vector location (X,Y) of foot in video stream
+                        data
+                        <br />
+                        Ensure: Identify initial contact
+                        <br />
+                        <br />
+                        for frame in video_stream:
+                        <br />
+                        <span class="mx-4"></span>if horizontal frame foot
+                        location is a gradient crossing peak:
+                        <br />
+                        <span class="mx-4"></span
+                        ><span class="mx-4"></span>append max_extensions list
+                        <br />
+                        <br />
+                        for max extension in max extensions
+                        <br />
+                        <span class="mx-4"></span>ROI = max extention + 30
+                        frames
+                        <br />
+                        <span class="mx-4"></span>IC = MAX gradient change in
+                        vertical movement
+                        <br />
+                        <br />
+                        return frame number where IC exists within each video
+                        stream</code
+                      >
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="mt-2">
+                Repeat Steps 2-4 until satisfied with results
+              </li>
+            </ol>
+          </div>
+        </div>
+        <!-- Actual Training End -->
+        <!-- Conclusion Start -->
+        <div class="row mt-4">
+          <div class="h4 fw-bold">
+            5. Applications and some ideas on how to use the data
+          </div>
+          <div class="col-12">
+            At this point, you have created a model that you deemed fit and have
+            collected results from it. Now the question to ask yourself is how
+            can you use this data? Below would be some ideas or applications of
+            the results your model has collected:
+          </div>
+          <div
+            class="col-12 d-flex justify-content-center align-items-center flex-column"
+          >
+            <div class="h6 text-center">Chart for Reference</div>
+            <img
+              src="./public/images/method/gradient_analysis.gif"
+              style="height: 350px"
+            />
+          </div>
+          <div class="col-12 mt-3">
+            <ul>
+              <li>
+                <span class="text-primary fw-bold"
+                  >Foot Location X: Distance Between Peaks Analysis</span
+                >
+                <ul>
+                  <li>
+                    Remember that, we discussed that the zero-crossing gradient
+                    peak of Foot Location X denotes the point of maximum
+                    extension
+                  </li>
+                  <li>
+                    We could calculate the distance between peaks and come up
+                    with the following leads:
+                    <ul>
+                      <li>
+                        If the distance between peaks is roughly the same for
+                        each interval, the runner has good running form
+                      </li>
+                      <li>
+                        If the distance between peaks fluctuates between high
+                        and low values, there could be an issue with the
+                        runner's form and there must be some underlying cause to
+                        it
+                      </li>
+                      <li>
+                        If the distance between peaks is short (assuming the
+                        runner is not running fast), he/she is not running
+                        optimally
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          <div class="col-12 mt-3">
+            <ul>
+              <li>
+                <span class="text-primary fw-bold"
+                  >Foot Location X: Slope of a Line Between Peaks Analysis</span
+                >
+                <ul>
+                  <li>
+                    Assume that Peak A and Peak B, are two peaks separated by
+                    one interval of Foot Location X
+                  </li>
+                  <li>
+                    We could draw a line from Peak A and Peak B and get the
+                    slope of that line
+                  </li>
+                  <li>
+                    In a perfect world, we would want a consistent gait where
+                    the max extension would be the same for each interval and
+                    the slope of the line from Peak A and Peak B would be 0
+                  </li>
+                  <li>
+                    Since that is hardly the case we could come up with 3
+                    different cases using the slope of the line between peaks
+                    instead:
+                    <ul>
+                      <li>
+                        If there are several intervals where the slope is too
+                        large, the runner is prone to hyperextension (high risk
+                        of injury)
+                      </li>
+                      <li>
+                        If there are several intervals where the slope is too
+                        small (or has a really high negative value), the runner
+                        is prone to hypoextension (although rare, still has a
+                        high risk of injury)
+                      </li>
+                      <li>
+                        If the slope is approximately close to 0, the runner has
+                        good running form
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          <div class="col-12 mt-3">
+            <ul>
+              <li>
+                <span class="text-primary fw-bold"
+                  >X-axis distance between
+                  <span class="text-success">Max Extension</span> and
+                  <span class="text-danger">Initial Contact</span></span
+                >
+                <ul>
+                  <li>
+                    One thing everyone knows about running is that one should
+                    never strike the ground when the foot is fully hyperextended
+                    (at max extension) because this position has a really high
+                    chance of injury and joint-related problems
+                  </li>
+                  <li>
+                    Using the data from the graph, we could calculate the
+                    distance between the max extension and initial contact in
+                    the x-axis
+                  </li>
+                  <li>
+                    After getting that number we could come up with the ff
+                    cases:
+                    <ul>
+                      <li>
+                        If the distance is too small, the runner has a high risk
+                        of injury
+                      </li>
+                      <li>
+                        If the distance is too large, the runner has a high risk
+                        of injury (missing the ground strike and falling fround)
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          <div class="col-12 mt-3">
+            <ul>
+              <li>
+                <span class="text-primary fw-bold"
+                  >There's probably more applications of this data and it is up
+                  to your creative mind on how to use it!</span
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- Conclusion End -->
+        <!-- Interactive Activity Start -->
+        <div class="mt-4">
+          <div class="h4 fw-bold">6. Interactive Activity!</div>
+          <div id="quiz-ctr"></div>
+        </div>
+        <!-- Interactive Activity End -->
+        <!-- Method End -->
+        <!-- Sources Start -->
+        <div class="" style="margin-top: 300px">
+          <div class="h5 fw-bold">Sources Cited:</div>
+          <ol>
+            <li id="ref1">
+              F. Young, R. Mason, J. Moore, S. Stuart, R. Morris and A. Godfrey,
+              "A proposed computer vision model for running gait assessment,"
+              2022 44th Annual International Conference of the IEEE Engineering
+              in Medicine & Biology Society (EMBC), 2022, pp. 4773-4776, doi:
+              10.1109/EMBC48229.2022.9871739.
+              <a
+                href="https://ieeexplore-ieee-org.proxylib.csueastbay.edu/document/9871739"
+                target="_blank"
+                >https://ieeexplore-ieee-org.proxylib.csueastbay.edu/document/9871739</a
+              >
+            </li>
+            <li>
+              Gad, Ahmed Fawzy. “Faster R-CNN Explained for Object Detection
+              Tasks.” Paperspace Blog, Paperspace Blog, 9 Apr. 2021,
+              <a
+                href="https://blog.paperspace.com/faster-r-cnn-explained-object-detection/#:~:text=Faster%20R%2DCNN%20is%20a,the%20locations%20of%20different%20objects"
+                target="_blank"
+                >https://blog.paperspace.com/faster-r-cnn-explained-object-detection/#:~:text=Faster%20R%2DCNN%20is%20a,the%20locations%20of%20different%20objects</a
+              >
+            </li>
+            <li id="ref3">
+              “Deep Network Designer.” ResNet-101 Convolutional Neural Network -
+              MATLAB,
+              <a
+                href="https://www.mathworks.com/help/deeplearning/ref/resnet101.html"
+                target="_blank"
+                >https://www.mathworks.com/help/deeplearning/ref/resnet101.html</a
+              >
+            </li>
+            <li id="ref4">
+              Mehta, Vidish. “Object Detection Using SSD Mobilenet V2.” Medium,
+              Medium, 22 May 2021,
+              <a
+                href="https://vidishmehta204.medium.com/object-detection-using-ssd-mobilenet-v2-7ff3543d738d"
+                target="_blank"
+              >
+                https://vidishmehta204.medium.com/object-detection-using-ssd-mobilenet-v2-7ff3543d738d
+              </a>
+            </li>
+            <li>
+              S. A. Dugan and K. P. Bhat, "Biomechanics and analysis of running
+              gait", Physical Medicine and Rehabilitation Clinics, vol. 16, no.
+              3, pp. 603-621, 2005
+            </li>
+          </ol>
+        </div>
+        <!-- Sources End -->
+      </div>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const revealAns = (elem) => {
+        const targetElem = document.getElementById(elem.dataset.target);
+        if (targetElem.classList.contains("d-none")) {
+          elem.innerText = "Hide Answer";
+          targetElem.classList.remove("d-none");
+        } else {
+          elem.innerText = "Click to reveal answer";
+          targetElem.classList.add("d-none");
+        }
+      };
+
+      document.addEventListener("DOMContentLoaded", (evt) => {
+        const quizCtr = document.getElementById("quiz-ctr");
+        const qsArr = [
+          {
+            qs: "What is the a zero crossing gradient?",
+            ans: "a point where the sign of a mathematical function changes (e.g. from positive to negative)",
+          },
+          {
+            qs: "What is a Gradient?",
+            ans: "a gradient is a derivative of a function that has more than one input variable. Known as the slope of a function in mathematical terms",
+          },
+          {
+            qs: "In terms of our topic, what do we mean by Initial Contact?",
+            ans: "the moment the foot first makes contact with the ground during gait",
+          },
+          {
+            qs: "What is a bounding box?",
+            ans: "the border's coordinates that enclose an image. They are often used to bind or identify a target and serve as a reference point for object detection and create a collision box for that object",
+          },
+          {
+            qs: "What is Intersection over Union (IoU)?",
+            ans: "a metric to evaluate how close the prediction bounding box is to the ground truth",
+          },
+          {
+            qs: "Which model and object tracking method was found to be the most optimal and performing?",
+            ans: "Faster RCNN Inception v2 with the tracking method: CSR-DCF object tracking.",
+          },
+          {
+            qs: "In the graph of our results, what did the point of the zero-crossing gradient for the line of Foot Location X denote?",
+            ans: "The point when the foot is at max extension",
+          },
+          {
+            qs: "In the graph of our results, what did the point where the gradient-plateaus for the line of Foot Location Y denote? (after max extension given by the line of Foot Location X)?",
+            ans: "The point of initial contact",
+          },
+        ];
+
+        const divElem = document.createElement("div");
+        qsArr.forEach((item, i) => {
+          const itemElem = document.createElement("div");
+          itemElem.innerHTML = `
+          <div class="mt-4">
+            <div class="text-primary fw-bold">${i + 1}. ${item.qs}</div>
+            <div role="button" class="text-success pe-auto" id="qs-${
+              i + 1
+            }" data-target="q-ans-${
+            i + 1
+          }" onClick="revealAns(this)">Click to reveal answer</div>
+            <div id="q-ans-${i + 1}" class="d-none">Answer: ${item.ans}</div>
+          </div>
+          `;
+          divElem.appendChild(itemElem);
+        });
+
+        quizCtr.appendChild(divElem);
+      });
+    </script>
+  </body>
+</html>
